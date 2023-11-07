@@ -8,7 +8,7 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                git url: 'https://github.com/mikefarquhar/learning-devops.git'
+                git url: 'https://github.com/mikefarquhar/learning-devops.git',
                     branch: 'main'
 
                 sh 'npm install'
