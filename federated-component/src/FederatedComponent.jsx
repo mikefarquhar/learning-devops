@@ -1,6 +1,5 @@
-import { Suspense } from "react";
-
-import { Component } from "react";
+import { Suspense, Component } from "react";
+import { useFederatedComponent } from "./useFederatedComponent";
 
 export class ErrorBoundary extends Component {
     constructor(props) {
@@ -15,13 +14,13 @@ export class ErrorBoundary extends Component {
 
     render() {
         const { error } = this.state;
-        const { childern } = this.props;
+        const { children } = this.props;
 
         if (error !== null) {
             return <p style={{ color: "#D0021B" }}>Error loading component</p>;
         }
 
-        return childern;
+        return children;
     }
 }
 

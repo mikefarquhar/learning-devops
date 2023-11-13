@@ -4,8 +4,7 @@
   "description": "",
   "main": "lib/index.js",
   "scripts": {
-    "build": "rimraf lib && babel src -d lib",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "rimraf lib && babel src -d lib"
   },
   "keywords": [],
   "author": "",

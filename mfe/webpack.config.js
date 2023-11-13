@@ -3,12 +3,10 @@
 const path = require("path");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
-// const { BundleAnalyzerPlugin } = require("webpack-bundle-analyzer");
 const { ModuleFederationPlugin } = require("webpack").container;
-const deps = require("./package.json").dependencies;
-
 const isProduction = process.env.NODE_ENV == "production";
-
+const { BundleAnalyzerPlugin } = require("webpack-bundle-analyzer");
+const deps = require("./package.json").dependencies;
 const stylesHandler = isProduction
     ? MiniCssExtractPlugin.loader
     : "style-loader";
@@ -27,7 +25,7 @@ const config = {
     devServer: {
         open: true,
         host: "localhost",
-        port: 8080,
+        port: 8081,
         historyApiFallback: true,
     },
     plugins: [
@@ -35,25 +33,18 @@ const config = {
             template: "index.html",
         }),
         new ModuleFederationPlugin({
-            name: "host",
-            //   remotes: {
-            //     mfe: "mfe@http://localhost:8081/remoteEntry.js",
-            //   },
+            name: "mfe",
+            filename: "remoteEntry.js",
+            exposes: { "./About": "./src/About" },
             shared: {
+                ...deps,
                 react: {
                     singleton: true,
                     requiredVersion: deps.react,
-                    eager: true,
                 },
                 "react-dom": {
                     singleton: true,
                     requiredVersion: deps["react-dom"],
-                    eager: true,
-                },
-                "react-router-dom": {
-                    singleton: true,
-                    requiredVersion: deps["react-router-dom"],
-                    eager: true,
                 },
             },
         }),
@@ -84,7 +75,7 @@ module.exports = () => {
     } else {
         config.mode = "development";
 
-        // config.plugins.push(new BundleAnalyzerPlugin());
+        // config.plugins.push(new BundleAnalyzerPlugin({ analyzerPort: 8889 }));
     }
     return config;
 };

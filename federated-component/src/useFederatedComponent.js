@@ -24,6 +24,7 @@ function getCaches() {
             remotes: new Map(),
         };
     }
+    return globalThis.mfeCaches;
 }
 
 async function loadModule(scope, module) {
@@ -52,7 +53,7 @@ function getRemoteUrl(scope) {
 
     if (remoteUrl === undefined) {
         throw new Error(
-            `No remote URL set for federated module "${scope}". This should be set in the host application.`
+            `No remote URL set for federated module "${scope}". This should be set in the host application.`,
         );
     }
 

@@ -1,7 +1,5 @@
-import { createRoot } from "react-dom/client";
-import { App } from "./app";
+globalThis.mfeConfig = {
+    mfe: "http://localhost:8081/remoteEntry.js",
+};
 
-const appContainer = document.getElementById("app");
-const root = createRoot(appContainer);
-
-root.render(<App />);
+import("./bootstrap");

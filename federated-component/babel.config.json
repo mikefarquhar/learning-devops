@@ -5,6 +5,6 @@
             "@babel/preset-env",
             { "modules": false, "corejs": "3.33", "useBuiltIns": "usage" }
         ],
-        "@babel/preset-react"
+        ["@babel/preset-react", { "runtime": "automatic" }]
     ]
 }
