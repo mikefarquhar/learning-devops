@@ -3,6 +3,7 @@
     { "path": "../", "name": "root" },
     { "path": "../host-app" },
     { "path": "../mfe" },
+    { "path": "../federated-component" },
     { "path": "../ops" }
   ]
 }

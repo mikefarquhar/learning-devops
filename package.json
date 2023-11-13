@@ -1,0 +1,9 @@
+{
+  "name": "learning-devops",
+  "private": true,
+  "workspaces": [
+    "federated-component",
+    "mfe",
+    "host-app"
+  ]
+}

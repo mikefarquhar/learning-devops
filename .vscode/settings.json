@@ -8,6 +8,7 @@
         "**/Thumbs.db": true,
         "mfe/": true,
         "host-app/": true,
-        "ops/": true
+        "ops/": true,
+        "federated-component/": true
     }
 }
