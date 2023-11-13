@@ -1,6 +1,4 @@
 terraform {
-  required_version = ">= 1.0"
-
   required_providers {
     aws = {
       source  = "hashicorp/aws"
@@ -10,25 +8,38 @@ terraform {
 }
 
 provider "aws" {
-  region  = var.region
-  profile = var.profile
+  region  = "eu-west-2"
+  profile = "mf-personal"
 }
 
-# bucket
-resource "aws_s3_bucket" "site_origin" {
-  bucket        = var.bucket
+# S3
+resource "aws_s3_bucket" "static_react_bucket" {
+  bucket        = "zebrasundae"
   force_destroy = true
+
+  tags = {
+    Name = "my-react-bucket"
+  }
 }
 
-resource "aws_s3_bucket_versioning" "site_origin" {
-  bucket = aws_s3_bucket.site_origin.id
+resource "aws_s3_bucket_public_access_block" "block_public_access" {
+  bucket = aws_s3_bucket.static_react_bucket.id
+
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
+resource "aws_s3_bucket_versioning" "static_react_bucket" {
+  bucket = aws_s3_bucket.static_react_bucket.id
   versioning_configuration {
     status = "Enabled"
   }
 }
 
-resource "aws_s3_bucket_server_side_encryption_configuration" "site_origin" {
-  bucket = aws_s3_bucket.site_origin.id
+resource "aws_s3_bucket_server_side_encryption_configuration" "static_react_bucket" {
+  bucket = aws_s3_bucket.static_react_bucket.id
 
   rule {
     apply_server_side_encryption_by_default {
@@ -37,31 +48,52 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "site_origin" {
   }
 }
 
-resource "aws_s3_bucket_public_access_block" "site_origin" {
-  bucket                  = aws_s3_bucket.site_origin.id
-  block_public_acls       = true
-  block_public_policy     = true
-  ignore_public_acls      = true
-  restrict_public_buckets = true
+data "aws_iam_policy_document" "react_app_s3_policy" {
+  statement {
+    actions   = ["s3:GetObject"]
+    resources = ["${aws_s3_bucket.static_react_bucket.arn}/*"]
+
+    principals {
+      type        = "AWS"
+      identifiers = [aws_cloudfront_origin_access_identity.oai.iam_arn]
+    }
+  }
 }
 
-# Cloudfront
-resource "aws_cloudfront_origin_access_control" "site_access" {
-  name                              = "security_pillar100_cf_s3_oac"
-  origin_access_control_origin_type = "s3"
-  signing_behavior                  = "always"
-  signing_protocol                  = "sigv4"
+resource "aws_s3_bucket_policy" "react_app_bucket_policy" {
+  bucket = aws_s3_bucket.static_react_bucket.id
+  policy = data.aws_iam_policy_document.react_app_s3_policy.json
 }
 
-resource "aws_cloudfront_distribution" "site_access" {
-  enabled             = true
+
+# cloudfront
+locals {
+  s3_origin_id = "S3-origin-react-app"
+}
+
+resource "aws_cloudfront_origin_access_identity" "oai" {
+  comment = "Zebra Sundae OAI"
+}
+
+resource "aws_cloudfront_distribution" "cf_distribution" {
+  origin {
+    domain_name = aws_s3_bucket.static_react_bucket.bucket_regional_domain_name
+    origin_id   = local.s3_origin_id
+
+    s3_origin_config {
+      origin_access_identity = aws_cloudfront_origin_access_identity.oai.cloudfront_access_identity_path
+    }
+  }
+
+  enabled         = true
+  is_ipv6_enabled = true
+
   default_root_object = "index.html"
 
   default_cache_behavior {
-    allowed_methods        = ["GET", "HEAD"]
-    cached_methods         = ["GET", "HEAD"]
-    target_origin_id       = aws_s3_bucket.site_origin.id
-    viewer_protocol_policy = "https-only"
+    allowed_methods  = ["GET", "HEAD", "OPTIONS"]
+    cached_methods   = ["GET", "HEAD"]
+    target_origin_id = local.s3_origin_id
 
     forwarded_values {
       query_string = false
@@ -70,51 +102,60 @@ resource "aws_cloudfront_distribution" "site_access" {
         forward = "none"
       }
     }
+
+    viewer_protocol_policy = "redirect-to-https"
+    min_ttl                = 0
+    default_ttl            = 3600
+    max_ttl                = 86400
+    compress               = true
   }
 
-  origin {
-    domain_name              = aws_s3_bucket.site_origin.bucket_domain_name
-    origin_id                = aws_s3_bucket.site_origin.id
-    origin_access_control_id = aws_cloudfront_origin_access_control.site_access.id
-  }
+  ordered_cache_behavior {
+    path_pattern     = "/index.html"
+    allowed_methods  = ["GET", "HEAD", "OPTIONS"]
+    cached_methods   = ["GET", "HEAD"]
+    target_origin_id = local.s3_origin_id
 
-  restrictions {
-    geo_restriction {
-      restriction_type = "whitelist"
-      locations        = ["GB"]
+    forwarded_values {
+      query_string = false
+
+      cookies {
+        forward = "none"
+      }
     }
+
+    min_ttl                = 0
+    default_ttl            = 0
+    max_ttl                = 0
+    compress               = true
+    viewer_protocol_policy = "redirect-to-https"
   }
+
+  price_class = "PriceClass_100"
 
   viewer_certificate {
     cloudfront_default_certificate = true
   }
-}
 
-resource "aws_s3_bucket_policy" "origin" {
-  bucket = aws_s3_bucket.site_origin.id
-  policy = data.aws_iam_policy_document.site_origin.json
-}
+  retain_on_delete = true
 
-data "aws_iam_policy_document" "site_origin" {
-  statement {
-    sid     = "3"
-    effect  = "Allow"
-    actions = ["s3:GetObject"]
+  custom_error_response {
+    error_caching_min_ttl = 300
+    error_code            = 403
+    response_code         = 200
+    response_page_path    = "/index.html"
+  }
 
-    principals {
-      identifiers = ["cloudfront.amazonaws.com"]
-      type        = "Service"
-    }
+  custom_error_response {
+    error_caching_min_ttl = 300
+    error_code            = 404
+    response_code         = 200
+    response_page_path    = "/index.html"
+  }
 
-    resources = [
-      "arn:aws:s3:::${aws_s3_bucket.site_origin.bucket}/*"
-    ]
-
-    condition {
-      test     = "StringEquals"
-      variable = "AWS:SourceArn"
-
-      values = [aws_cloudfront_distribution.site_access.arn]
+  restrictions {
+    geo_restriction {
+      restriction_type = "none"
     }
   }
 }
