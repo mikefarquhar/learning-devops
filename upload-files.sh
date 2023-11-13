@@ -1,1 +1,0 @@
-aws s3 cp ./dist s3://zebrasundae --recursive --profile mf-personal
