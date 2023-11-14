@@ -1,8 +1,10 @@
 // Generated using webpack-cli https://github.com/webpack/webpack-cli
 
+require("dotenv").config();
 const path = require("path");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
+const { DefinePlugin } = require("webpack");
 // const { BundleAnalyzerPlugin } = require("webpack-bundle-analyzer");
 const { ModuleFederationPlugin } = require("webpack").container;
 const deps = require("./package.json").dependencies;
@@ -34,11 +36,13 @@ const config = {
         new HtmlWebpackPlugin({
             template: "index.html",
         }),
+        new DefinePlugin({
+            "process.env.REMOTE_MFE_URL": JSON.stringify(
+                process.env.REMOTE_MFE_URL,
+            ),
+        }),
         new ModuleFederationPlugin({
             name: "host",
-            //   remotes: {
-            //     mfe: "mfe@http://localhost:8081/remoteEntry.js",
-            //   },
             shared: {
                 react: {
                     singleton: true,
