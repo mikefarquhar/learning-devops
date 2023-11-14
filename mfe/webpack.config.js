@@ -37,7 +37,6 @@ const config = {
             filename: "remoteEntry.js",
             exposes: { "./About": "./src/About" },
             shared: {
-                ...deps,
                 react: {
                     singleton: true,
                     requiredVersion: deps.react,
@@ -45,6 +44,10 @@ const config = {
                 "react-dom": {
                     singleton: true,
                     requiredVersion: deps["react-dom"],
+                },
+                "react-router-dom": {
+                    singleton: true,
+                    requiredVersion: deps["react-router-dom"],
                 },
             },
         }),
