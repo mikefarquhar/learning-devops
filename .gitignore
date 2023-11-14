@@ -3,5 +3,5 @@ dist
 lib
 *.log
 .SECRET
-terraform/.terraform
+.terraform
 .env
