@@ -1,9 +1,9 @@
 import { Link } from "react-router-dom";
 
-export function Home() {
+export function Restricted() {
     return (
         <>
-            <h1>Home</h1>
+            <h1>Restricted (Teachers only)</h1>
             <ul>
                 <li>
                     <Link to={"/"}>Home</Link>

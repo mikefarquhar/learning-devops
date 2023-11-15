@@ -40,6 +40,18 @@ const config = {
             "process.env.REMOTE_MFE_URL": JSON.stringify(
                 process.env.REMOTE_MFE_URL,
             ),
+            "process.env.OIDC_AUTHORITY": JSON.stringify(
+                process.env.OIDC_AUTHORITY,
+            ),
+            "process.env.OIDC_CLIENT_ID": JSON.stringify(
+                process.env.OIDC_CLIENT_ID,
+            ),
+            "process.env.OIDC_LOGIN_REDIRECT_URI": JSON.stringify(
+                process.env.OIDC_LOGIN_REDIRECT_URI,
+            ),
+            "process.env.OIDC_LOGOUT_REDIRECT_URI": JSON.stringify(
+                process.env.OIDC_LOGOUT_REDIRECT_URI,
+            ),
         }),
         new ModuleFederationPlugin({
             name: "host",
