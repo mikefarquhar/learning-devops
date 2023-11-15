@@ -1,0 +1,10 @@
+{
+    "sourceMaps": true,
+    "presets": [
+        [
+            "@babel/preset-env",
+            { "modules": false, "corejs": "3.33", "useBuiltIns": "usage" }
+        ],
+        ["@babel/preset-react", { "runtime": "automatic" }]
+    ]
+}

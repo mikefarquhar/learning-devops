@@ -1,0 +1,30 @@
+{
+  "name": "auth",
+  "version": "1.0.0",
+  "description": "",
+  "main": "lib/index.js",
+  "scripts": {
+    "build": "rimraf lib && babel src -d lib"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@babel/cli": "^7.23.0",
+    "@babel/core": "^7.23.3",
+    "@babel/preset-env": "^7.23.3",
+    "@babel/preset-react": "^7.23.3",
+    "eslint": "^8.53.0",
+    "eslint-plugin-react": "^7.33.2",
+    "rimraf": "^5.0.5"
+  },
+  "peerDependencies": {
+    "react": "^18.2.0",
+    "react-router-dom": "^6.18.0"
+  },
+  "dependencies": {
+    "core-js": "^3.33.2",
+    "oidc-client-ts": "^2.4.0",
+    "prop-types": "^15.8.1"
+  }
+}

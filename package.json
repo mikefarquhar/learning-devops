@@ -2,6 +2,7 @@
   "name": "learning-devops",
   "workspaces": [
     "federated-component",
+    "auth",
     "mfe",
     "host-app"
   ]

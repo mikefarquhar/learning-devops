@@ -4,6 +4,7 @@
     { "path": "../host-app" },
     { "path": "../mfe" },
     { "path": "../federated-component" },
+    { "path": "../auth" },
     { "path": "../ops" }
   ]
 }

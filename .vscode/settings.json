@@ -9,6 +9,7 @@
         "mfe/": true,
         "host-app/": true,
         "ops/": true,
-        "federated-component/": true
+        "federated-component/": true,
+        "auth/": true,
     }
 }
