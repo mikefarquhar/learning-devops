@@ -1,6 +1,6 @@
 docker network create jenkins
 
-docker run --name jenkins-docker --detach \
+docker run --name jenkins-docker --restart=on-failure --detach \
   --privileged --network jenkins --network-alias docker \
   --env DOCKER_TLS_CERTDIR=/certs \
   --volume jenkins-docker-certs:/certs/client \
