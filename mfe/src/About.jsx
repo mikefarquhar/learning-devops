@@ -11,6 +11,9 @@ export default function About() {
                 <li>
                     <Link to={"/about"}>About</Link>
                 </li>
+                <li>
+                    <Link to={"/restricted"}>Restricted</Link>
+                </li>
             </ul>
         </>
     );
