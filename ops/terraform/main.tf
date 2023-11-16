@@ -8,33 +8,28 @@ terraform {
 }
 
 provider "aws" {
-  region  = "eu-west-2"
-  profile = "mf-personal"
+  region = "eu-west-1"
 }
 
 # S3
 resource "aws_s3_bucket" "static_react_bucket" {
-  bucket        = "zebrasundae"
+  bucket        = "mod-fed-test"
   force_destroy = true
-
-  tags = {
-    Name = "my-react-bucket"
-  }
 }
 
 resource "aws_s3_bucket_public_access_block" "block_public_access" {
   bucket = aws_s3_bucket.static_react_bucket.id
 
-  block_public_acls       = true
-  block_public_policy     = true
-  ignore_public_acls      = true
-  restrict_public_buckets = true
+  block_public_acls       = false
+  block_public_policy     = false
+  ignore_public_acls      = false
+  restrict_public_buckets = false
 }
 
 resource "aws_s3_bucket_versioning" "static_react_bucket" {
   bucket = aws_s3_bucket.static_react_bucket.id
   versioning_configuration {
-    status = "Enabled"
+    status = "Disabled"
   }
 }
 
@@ -48,41 +43,80 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "static_react_buck
   }
 }
 
-data "aws_iam_policy_document" "react_app_s3_policy" {
+resource "aws_s3_bucket_cors_configuration" "static_react_bucket" {
+  bucket = aws_s3_bucket.static_react_bucket.id
+
+  cors_rule {
+    allowed_methods = ["GET"]
+    allowed_origins = ["*"]
+  }
+}
+
+resource "aws_s3_bucket_website_configuration" "static_react_bucket" {
+  bucket = aws_s3_bucket.static_react_bucket.id
+
+  index_document {
+    suffix = "index.html"
+  }
+
+  # error_document {
+  #   key = "index.html"
+  # }
+
+
+}
+
+data "aws_iam_policy_document" "static_react_bucket" {
   statement {
-    actions   = ["s3:GetObject"]
+    sid    = "AllowCloudFrontServicePrincipalReadOnly"
+    effect = "Allow"
+    principals {
+      type        = "Service"
+      identifiers = ["cloudfront.amazonaws.com"]
+    }
+
+    actions = ["s3:GetObject"]
+
     resources = ["${aws_s3_bucket.static_react_bucket.arn}/*"]
 
-    principals {
-      type        = "AWS"
-      identifiers = [aws_cloudfront_origin_access_identity.oai.iam_arn]
+    condition {
+      test     = "StringEquals"
+      variable = "AWS:SoucreArn"
+      values   = [aws_cloudfront_distribution.cf_distribution.arn]
     }
   }
 }
 
+
 resource "aws_s3_bucket_policy" "react_app_bucket_policy" {
+
   bucket = aws_s3_bucket.static_react_bucket.id
-  policy = data.aws_iam_policy_document.react_app_s3_policy.json
+  policy = data.aws_iam_policy_document.static_react_bucket.json
 }
 
 
 # cloudfront
 locals {
-  s3_origin_id = "S3-origin-react-app"
+  s3_origin_id = "S3-mod-fed-test"
 }
 
-resource "aws_cloudfront_origin_access_identity" "oai" {
-  comment = "Zebra Sundae OAI"
+# resource "aws_cloudfront_origin_access_identity" "oai" {
+#   comment = "Mod Fed Test OAI"
+# }
+
+resource "aws_cloudfront_origin_access_control" "mod-fed-test-oac" {
+  name                              = "mod-fed-test-oac"
+  description                       = "Module Federation Test OAC"
+  origin_access_control_origin_type = "s3"
+  signing_behavior                  = "always"
+  signing_protocol                  = "sigv4"
 }
 
 resource "aws_cloudfront_distribution" "cf_distribution" {
   origin {
-    domain_name = aws_s3_bucket.static_react_bucket.bucket_regional_domain_name
-    origin_id   = local.s3_origin_id
-
-    s3_origin_config {
-      origin_access_identity = aws_cloudfront_origin_access_identity.oai.cloudfront_access_identity_path
-    }
+    domain_name              = aws_s3_bucket.static_react_bucket.bucket_regional_domain_name
+    origin_id                = local.s3_origin_id
+    origin_access_control_id = aws_cloudfront_origin_access_control.mod-fed-test-oac.id
   }
 
   enabled         = true
@@ -108,27 +142,6 @@ resource "aws_cloudfront_distribution" "cf_distribution" {
     default_ttl            = 3600
     max_ttl                = 86400
     compress               = true
-  }
-
-  ordered_cache_behavior {
-    path_pattern     = "/index.html"
-    allowed_methods  = ["GET", "HEAD", "OPTIONS"]
-    cached_methods   = ["GET", "HEAD"]
-    target_origin_id = local.s3_origin_id
-
-    forwarded_values {
-      query_string = false
-
-      cookies {
-        forward = "none"
-      }
-    }
-
-    min_ttl                = 0
-    default_ttl            = 0
-    max_ttl                = 0
-    compress               = true
-    viewer_protocol_policy = "redirect-to-https"
   }
 
   price_class = "PriceClass_100"

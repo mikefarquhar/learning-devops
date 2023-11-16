@@ -1,1 +1,1 @@
-aws s3 cp ./dist s3://zebrasundae --recursive --profile mf-personal
+aws s3 cp ./dist s3://mod-fed-test --recursive --acl public-read
