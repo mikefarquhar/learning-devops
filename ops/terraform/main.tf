@@ -17,6 +17,13 @@ resource "aws_s3_bucket" "static_react_bucket" {
   force_destroy = true
 }
 
+resource "aws_s3_bucket_ownership_controls" "react_app_bucket_ownership_controls" {
+  bucket = aws_s3_bucket.static_react_bucket.id
+  rule {
+    object_ownership = "BucketOwnerPreferred"
+  }
+}
+
 resource "aws_s3_bucket_public_access_block" "block_public_access" {
   bucket = aws_s3_bucket.static_react_bucket.id
 
@@ -24,6 +31,16 @@ resource "aws_s3_bucket_public_access_block" "block_public_access" {
   block_public_policy     = false
   ignore_public_acls      = false
   restrict_public_buckets = false
+}
+
+resource "aws_s3_bucket_acl" "static_react_bucket" {
+  depends_on = [
+    aws_s3_bucket_ownership_controls.react_app_bucket_ownership_controls,
+    aws_s3_bucket_public_access_block.block_public_access,
+  ]
+
+  bucket = aws_s3_bucket.static_react_bucket.id
+  acl    = "public-read"
 }
 
 resource "aws_s3_bucket_versioning" "static_react_bucket" {
