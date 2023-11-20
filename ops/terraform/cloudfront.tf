@@ -1,9 +1,9 @@
 locals {
-  s3_origin_id = "S3-mod-fed-test"
+  s3_origin_id = "S3-${var.bucketName}"
 }
 
 resource "aws_cloudfront_origin_access_control" "mod-fed-test-oac" {
-  name                              = "mod-fed-test-oac"
+  name                              = "${var.bucketName}-oac"
   description                       = "Module Federation Test OAC"
   origin_access_control_origin_type = "s3"
   signing_behavior                  = "always"
@@ -16,6 +16,8 @@ resource "aws_cloudfront_distribution" "cf_distribution" {
     origin_id                = local.s3_origin_id
     origin_access_control_id = aws_cloudfront_origin_access_control.mod-fed-test-oac.id
   }
+
+  # aliases = ["${var.domainName}"]
 
   enabled         = true
   is_ipv6_enabled = true
@@ -69,4 +71,8 @@ resource "aws_cloudfront_distribution" "cf_distribution" {
       restriction_type = "none"
     }
   }
+}
+
+output "cdn_domain" {
+  value = "${aws_cloudfront_distribution.cf_distribution.domain_name}"
 }
