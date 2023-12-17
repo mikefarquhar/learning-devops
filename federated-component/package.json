@@ -4,7 +4,8 @@
   "description": "",
   "main": "lib/index.js",
   "scripts": {
-    "build": "rimraf lib && babel src -d lib"
+    "build": "rimraf lib && babel src -d lib",
+    "dev": "babel src -d lib --watch"
   },
   "keywords": [],
   "author": "",
